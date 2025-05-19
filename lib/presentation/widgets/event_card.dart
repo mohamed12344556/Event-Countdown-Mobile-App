@@ -86,7 +86,11 @@ class EventCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              CountdownTimer(targetDate: event.date, time: event.time),
+              CountdownTimer(
+                targetDate: event.date,
+                time: event.time,
+                // showSeconds: true,
+              ),
             ],
           ),
         ),

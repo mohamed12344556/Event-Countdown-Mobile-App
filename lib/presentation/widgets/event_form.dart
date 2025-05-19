@@ -171,6 +171,111 @@ class EventForm extends StatelessWidget {
     );
   }
 
+  // Widget _buildNotificationOptions(BuildContext context) {
+  //   return Card(
+  //     margin: EdgeInsets.zero,
+  //     child: Padding(
+  //       padding: const EdgeInsets.all(16),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           const Text(
+  //             'Notification Options',
+  //             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+  //           ),
+  //           const SizedBox(height: 16),
+  //           SwitchListTile(
+  //             title: const Text('Enable Notifications'),
+  //             contentPadding: EdgeInsets.zero,
+  //             value: notificationOptions['enabled'] ?? true,
+  //             onChanged: (value) {
+  //               final updatedOptions = Map<String, dynamic>.from(
+  //                 notificationOptions,
+  //               );
+  //               updatedOptions['enabled'] = value;
+  //               onNotificationOptionsChanged(updatedOptions);
+  //             },
+  //           ),
+  //           if (notificationOptions['enabled'] == true) ...[
+  //             SwitchListTile(
+  //               title: const Text('Reminder'),
+  //               subtitle: const Text('Get notified before the event'),
+  //               contentPadding: EdgeInsets.zero,
+  //               value: notificationOptions['reminder'] ?? true,
+  //               onChanged: (value) {
+  //                 final updatedOptions = Map<String, dynamic>.from(
+  //                   notificationOptions,
+  //                 );
+  //                 updatedOptions['reminder'] = value;
+  //                 onNotificationOptionsChanged(updatedOptions);
+  //               },
+  //             ),
+  //             if (notificationOptions['reminder'] == true) ...[
+  //               const Padding(
+  //                 padding: EdgeInsets.only(left: 16),
+  //                 child: Text('Remind me before:'),
+  //               ),
+  //               Slider(
+  //                 value:
+  //                     (notificationOptions['reminderHours'] as int? ?? 24)
+  //                         .toDouble(),
+  //                 min: 1,
+  //                 max: 72,
+  //                 divisions: 71,
+  //                 label: '${notificationOptions['reminderHours'] ?? 24} hours',
+  //                 onChanged: (value) {
+  //                   final updatedOptions = Map<String, dynamic>.from(
+  //                     notificationOptions,
+  //                   );
+  //                   updatedOptions['reminderHours'] = value.toInt();
+  //                   onNotificationOptionsChanged(updatedOptions);
+  //                 },
+  //               ),
+  //               Padding(
+  //                 padding: const EdgeInsets.symmetric(horizontal: 16),
+  //                 child: Row(
+  //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                   children: [
+  //                     const Text('1 hour'),
+  //                     Text(
+  //                       '${notificationOptions['reminderHours'] ?? 24} hours',
+  //                     ),
+  //                     const Text('72 hours'),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ],
+  //             SwitchListTile(
+  //               title: const Text('Sound'),
+  //               contentPadding: EdgeInsets.zero,
+  //               value: notificationOptions['sound'] ?? true,
+  //               onChanged: (value) {
+  //                 final updatedOptions = Map<String, dynamic>.from(
+  //                   notificationOptions,
+  //                 );
+  //                 updatedOptions['sound'] = value;
+  //                 onNotificationOptionsChanged(updatedOptions);
+  //               },
+  //             ),
+  //             SwitchListTile(
+  //               title: const Text('Vibration'),
+  //               contentPadding: EdgeInsets.zero,
+  //               value: notificationOptions['vibration'] ?? true,
+  //               onChanged: (value) {
+  //                 final updatedOptions = Map<String, dynamic>.from(
+  //                   notificationOptions,
+  //                 );
+  //                 updatedOptions['vibration'] = value;
+  //                 onNotificationOptionsChanged(updatedOptions);
+  //               },
+  //             ),
+  //           ],
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
   Widget _buildNotificationOptions(BuildContext context) {
     return Card(
       margin: EdgeInsets.zero,
@@ -211,39 +316,103 @@ class EventForm extends StatelessWidget {
                 },
               ),
               if (notificationOptions['reminder'] == true) ...[
-                const Padding(
-                  padding: EdgeInsets.only(left: 16),
-                  child: Text('Remind me before:'),
-                ),
-                Slider(
-                  value:
-                      (notificationOptions['reminderHours'] as int? ?? 24)
-                          .toDouble(),
-                  min: 1,
-                  max: 72,
-                  divisions: 71,
-                  label: '${notificationOptions['reminderHours'] ?? 24} hours',
+                // تحديد نوع التذكير (ساعات أو ثوانِ للاختبار)
+                SwitchListTile(
+                  title: const Text('Test Mode'),
+                  subtitle: const Text(
+                    'Use seconds instead of hours (for testing)',
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  value: notificationOptions['testMode'] ?? false,
                   onChanged: (value) {
                     final updatedOptions = Map<String, dynamic>.from(
                       notificationOptions,
                     );
-                    updatedOptions['reminderHours'] = value.toInt();
+                    updatedOptions['testMode'] = value;
+
+                    // إذا تم تفعيل وضع الاختبار، ضبط قيمة التذكير على 3 ثوانٍ
+                    if (value) {
+                      updatedOptions['reminderSeconds'] = 3;
+                    }
+
                     onNotificationOptionsChanged(updatedOptions);
                   },
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('1 hour'),
-                      Text(
-                        '${notificationOptions['reminderHours'] ?? 24} hours',
-                      ),
-                      const Text('72 hours'),
-                    ],
+
+                // إعدادات التذكير حسب وضع الاختبار
+                if (notificationOptions['testMode'] == true) ...[
+                  // وضع الاختبار: ثوانٍ
+                  const Padding(
+                    padding: EdgeInsets.only(left: 16),
+                    child: Text('Remind me before (in seconds):'),
                   ),
-                ),
+                  Slider(
+                    value:
+                        (notificationOptions['reminderSeconds'] as int? ?? 3)
+                            .toDouble(),
+                    min: 3,
+                    max: 30,
+                    divisions: 27,
+                    label:
+                        '${notificationOptions['reminderSeconds'] ?? 3} seconds',
+                    onChanged: (value) {
+                      final updatedOptions = Map<String, dynamic>.from(
+                        notificationOptions,
+                      );
+                      updatedOptions['reminderSeconds'] = value.toInt();
+                      onNotificationOptionsChanged(updatedOptions);
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('3 seconds'),
+                        Text(
+                          '${notificationOptions['reminderSeconds'] ?? 3} seconds',
+                        ),
+                        const Text('30 seconds'),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  // الوضع العادي: ساعات
+                  const Padding(
+                    padding: EdgeInsets.only(left: 16),
+                    child: Text('Remind me before (in hours):'),
+                  ),
+                  Slider(
+                    value:
+                        (notificationOptions['reminderHours'] as int? ?? 24)
+                            .toDouble(),
+                    min: 1,
+                    max: 72,
+                    divisions: 71,
+                    label:
+                        '${notificationOptions['reminderHours'] ?? 24} hours',
+                    onChanged: (value) {
+                      final updatedOptions = Map<String, dynamic>.from(
+                        notificationOptions,
+                      );
+                      updatedOptions['reminderHours'] = value.toInt();
+                      onNotificationOptionsChanged(updatedOptions);
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('1 hour'),
+                        Text(
+                          '${notificationOptions['reminderHours'] ?? 24} hours',
+                        ),
+                        const Text('72 hours'),
+                      ],
+                    ),
+                  ),
+                ],
               ],
               SwitchListTile(
                 title: const Text('Sound'),

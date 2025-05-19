@@ -17,6 +17,8 @@ class SettingsLoaded extends SettingsState {
   final bool notificationsEnabled;
   final bool soundEnabled;
   final bool vibrationEnabled;
+  final String dateFormat;
+  final String timeFormat;
 
   const SettingsLoaded({
     required this.darkMode,
@@ -24,10 +26,20 @@ class SettingsLoaded extends SettingsState {
     required this.notificationsEnabled,
     required this.soundEnabled,
     required this.vibrationEnabled,
+    this.dateFormat = 'MMM d, yyyy', // القيمة الافتراضية
+    this.timeFormat = 'h:mm a', // القيمة الافتراضية
   });
 
   @override
-  List<Object> get props => [darkMode, theme, notificationsEnabled, soundEnabled, vibrationEnabled];
+  List<Object> get props => [
+    darkMode,
+    theme,
+    notificationsEnabled,
+    soundEnabled,
+    vibrationEnabled,
+    dateFormat,
+    timeFormat,
+  ];
 }
 
 class SettingsError extends SettingsState {

@@ -150,6 +150,96 @@ class EventCubit extends Cubit<EventState> {
   // === دوال مساعدة ===
 
   // جدولة الإشعارات للحدث
+  // Future<void> _scheduleEventNotifications(EventModel event) async {
+  //   if (event.notificationOptions['enabled'] != true) {
+  //     print("Notifications disabled for this event. Skipping.");
+  //     return;
+  //   }
+
+  //   final eventDateTime = _getEventDateTime(event);
+  //   final now = DateTime.now();
+
+  //   print("Current time: $now");
+  //   print("Event time: $eventDateTime");
+  //   print("Time difference: ${eventDateTime.difference(now)}");
+
+  //   // قائمة لتتبع معرفات الإشعارات المستخدمة
+  //   final notificationIds = <int>[];
+
+  //   // 1. جدولة إشعار التذكير (إذا كان مفعلاً)
+  //   if (event.notificationOptions['reminder'] == true) {
+  //     final reminderHours =
+  //         event.notificationOptions['reminderHours'] as int? ?? 24;
+  //     final reminderDateTime = eventDateTime.subtract(
+  //       Duration(hours: reminderHours),
+  //     );
+
+  //     print("Reminder time: $reminderDateTime");
+  //     print("Reminder time difference: ${reminderDateTime.difference(now)}");
+
+  //     if (reminderDateTime.isAfter(now)) {
+  //       final reminderId = _generateNotificationId(event.id, "reminder");
+  //       notificationIds.add(reminderId);
+
+  //       print("Scheduling reminder notification:");
+  //       print("ID: $reminderId");
+  //       print("Title: Reminder: ${event.title}");
+  //       print("Body: Your event is coming up in $reminderHours hours!");
+  //       print("Time: $reminderDateTime");
+
+  //       try {
+  //         await notificationRepository.scheduleNotification(
+  //           NotificationModel(
+  //             id: reminderId,
+  //             title: 'Reminder: ${event.title}',
+  //             body: 'Your event is coming up in $reminderHours hours!',
+  //             scheduledDate: reminderDateTime,
+  //           ),
+  //         );
+  //         print("✓ Reminder notification scheduled successfully");
+  //       } catch (e) {
+  //         print("❌ Error scheduling reminder notification: $e");
+  //       }
+  //     } else {
+  //       print(
+  //         "⚠️ Reminder time is in the past. Skipping reminder notification.",
+  //       );
+  //     }
+  //   }
+
+  //   // 2. جدولة الإشعار الرئيسي
+  //   if (eventDateTime.isAfter(now)) {
+  //     final mainId = _generateNotificationId(event.id, "main");
+  //     notificationIds.add(mainId);
+
+  //     print("Scheduling main notification:");
+  //     print("ID: $mainId");
+  //     print("Title: ${event.title}");
+  //     print("Body: Your event is now!");
+  //     print("Time: $eventDateTime");
+
+  //     try {
+  //       await notificationRepository.scheduleNotification(
+  //         NotificationModel(
+  //           id: mainId,
+  //           title: event.title,
+  //           body: 'Your event is now!',
+  //           scheduledDate: eventDateTime,
+  //         ),
+  //       );
+  //       print("✓ Main notification scheduled successfully");
+  //     } catch (e) {
+  //       print("❌ Error scheduling main notification: $e");
+  //       print("Error details: $e");
+  //     }
+  //   } else {
+  //     print("⚠️ Event time is in the past. Skipping main notification.");
+  //   }
+
+  //   // حفظ معرفات الإشعارات للاستخدام في المستقبل
+  //   _eventNotificationIds[event.id] = notificationIds;
+  // }
+
   Future<void> _scheduleEventNotifications(EventModel event) async {
     if (event.notificationOptions['enabled'] != true) {
       print("Notifications disabled for this event. Skipping.");
@@ -166,16 +256,42 @@ class EventCubit extends Cubit<EventState> {
     // قائمة لتتبع معرفات الإشعارات المستخدمة
     final notificationIds = <int>[];
 
+    // التحقق من وضع الاختبار (Test Mode)
+    final bool isTestMode = event.notificationOptions['testMode'] == true;
+    print("Test mode: ${isTestMode ? 'ENABLED' : 'DISABLED'}");
+
     // 1. جدولة إشعار التذكير (إذا كان مفعلاً)
     if (event.notificationOptions['reminder'] == true) {
-      final reminderHours =
-          event.notificationOptions['reminderHours'] as int? ?? 24;
-      final reminderDateTime = eventDateTime.subtract(
-        Duration(hours: reminderHours),
-      );
+      Duration reminderOffset;
+      String reminderMessage;
+
+      if (isTestMode) {
+        // وضع الاختبار: استخدام الثواني
+        final reminderSeconds =
+            event.notificationOptions['reminderSeconds'] as int? ?? 3;
+        reminderOffset = Duration(seconds: reminderSeconds);
+        reminderMessage =
+            'Your event is coming up in $reminderSeconds seconds!';
+        print(
+          "Using TEST MODE: Reminder will be $reminderSeconds seconds before event",
+        );
+      } else {
+        // الوضع العادي: استخدام الساعات
+        final reminderHours =
+            event.notificationOptions['reminderHours'] as int? ?? 24;
+        reminderOffset = Duration(hours: reminderHours);
+        reminderMessage = 'Your event is coming up in $reminderHours hours!';
+        print(
+          "Using NORMAL MODE: Reminder will be $reminderHours hours before event",
+        );
+      }
+
+      final reminderDateTime = eventDateTime.subtract(reminderOffset);
 
       print("Reminder time: $reminderDateTime");
-      print("Reminder time difference: ${reminderDateTime.difference(now)}");
+      print(
+        "Reminder time difference from now: ${reminderDateTime.difference(now)}",
+      );
 
       if (reminderDateTime.isAfter(now)) {
         final reminderId = _generateNotificationId(event.id, "reminder");
@@ -184,7 +300,7 @@ class EventCubit extends Cubit<EventState> {
         print("Scheduling reminder notification:");
         print("ID: $reminderId");
         print("Title: Reminder: ${event.title}");
-        print("Body: Your event is coming up in $reminderHours hours!");
+        print("Body: $reminderMessage");
         print("Time: $reminderDateTime");
 
         try {
@@ -192,13 +308,14 @@ class EventCubit extends Cubit<EventState> {
             NotificationModel(
               id: reminderId,
               title: 'Reminder: ${event.title}',
-              body: 'Your event is coming up in $reminderHours hours!',
+              body: reminderMessage,
               scheduledDate: reminderDateTime,
             ),
           );
           print("✓ Reminder notification scheduled successfully");
         } catch (e) {
           print("❌ Error scheduling reminder notification: $e");
+          print("Error details: $e");
         }
       } else {
         print(
@@ -231,9 +348,69 @@ class EventCubit extends Cubit<EventState> {
       } catch (e) {
         print("❌ Error scheduling main notification: $e");
         print("Error details: $e");
+
+        // محاولة بديلة باستخدام وضع غير دقيق إذا فشل الوضع الدقيق
+        try {
+          print("Trying alternative scheduling method...");
+          await notificationRepository.scheduleAlternativeNotification(
+            NotificationModel(
+              id: mainId,
+              title: event.title,
+              body: 'Your event is now!',
+              scheduledDate: eventDateTime,
+            ),
+          );
+          print("✓ Main notification scheduled with alternative method");
+        } catch (alternativeError) {
+          print("❌ Alternative scheduling also failed: $alternativeError");
+        }
       }
     } else {
       print("⚠️ Event time is in the past. Skipping main notification.");
+
+      // إضافة جديدة: إذا كان الوقت في الماضي القريب (خلال الساعة الماضية)، نعرض إشعار فوري
+      if (now.difference(eventDateTime).inHours < 1) {
+        final lateId = _generateNotificationId(event.id, "late");
+        notificationIds.add(lateId);
+
+        print("Event was recent. Showing immediate notification instead.");
+        try {
+          await notificationRepository.showImmediateNotification(
+            NotificationModel(
+              id: lateId,
+              title: 'Event Started: ${event.title}',
+              body: 'Your scheduled event has started.',
+              scheduledDate: now,
+            ),
+          );
+          print("✓ Immediate notification shown for past event");
+        } catch (e) {
+          print("❌ Error showing immediate notification: $e");
+        }
+      }
+    }
+
+    // 3. اختياري: جدولة إشعار لتذكير ما بعد 5 دقائق من بدء الحدث
+    if (eventDateTime.isAfter(now)) {
+      final followUpTime = eventDateTime.add(const Duration(minutes: 5));
+      final followUpId = _generateNotificationId(event.id, "followup");
+      notificationIds.add(followUpId);
+
+      try {
+        await notificationRepository.scheduleNotification(
+          NotificationModel(
+            id: followUpId,
+            title: 'How\'s your event going?',
+            body: '${event.title} started 5 minutes ago.',
+            scheduledDate: followUpTime,
+          ),
+        );
+        print(
+          "✓ Follow-up notification scheduled successfully for 5 minutes after event",
+        );
+      } catch (e) {
+        print("❌ Error scheduling follow-up notification: $e");
+      }
     }
 
     // حفظ معرفات الإشعارات للاستخدام في المستقبل
