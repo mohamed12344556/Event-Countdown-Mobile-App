@@ -8,11 +8,13 @@ plugins {
 android {
     namespace = "com.example.event_countdown_mobile_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -42,3 +44,11 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // ... your existing dependencies here ...
+
+    // Add this line to pull in the desugaring support library
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+
